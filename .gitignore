@@ -1,2 +1,6 @@
-stremio_log.txt
 __pycache__/
+*.spec
+build/
+dist/
+stremio_log.txt
+*.user
