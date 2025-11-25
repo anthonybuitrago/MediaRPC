@@ -1,5 +1,3 @@
-import sys
-import subprocess
 import time
 import threading
 import requests
@@ -8,13 +6,12 @@ from pypresence import Presence, ActivityType
 from pystray import Icon, MenuItem, Menu
 from PIL import Image
 import os
+import sys
 
-# Importamos nuestros módulos propios
 import config_manager
 import utils
-import gui  # <--- IMPORTANTE: Importamos la ventana gráfica
+import gui
 
-# Variables Globales
 APP_RUNNING = True
 CONFIG = config_manager.cargar_config()
 
@@ -31,20 +28,20 @@ def conectar_discord():
     return rpc
 
 def bucle_logica():
-    """El cerebro del programa (Hilo secundario)"""
     global APP_RUNNING
-    utils.log("🚀 Hilo Principal Iniciado (Modular).")
+    utils.log("🚀 Hilo V38.0 (Anime Fix) Iniciado.")
     
     RPC = conectar_discord()
     ultimo_titulo = ""
     ultima_actualizacion = 0
     tiempo_inicio = None
     tiempo_fin = None
+    
     poster_actual = "stremio_logo"
+    titulo_oficial = ""
 
     while APP_RUNNING:
         try:
-            # Leer Stremio Local
             try:
                 response = requests.get("http://127.0.0.1:11470/stats.json", timeout=3)
                 conectado = True
@@ -59,16 +56,16 @@ def bucle_logica():
                     nombre_crudo = str(video.get('name', ''))
                     
                     if nombre_crudo:
-                        nombre_limpio = utils.limpiar_nombre(nombre_crudo, CONFIG["blacklisted_words"])
+                        # V38: Recibimos nombre Y tipo
+                        nombre_semilla, tipo_video = utils.extraer_datos_video(nombre_crudo)
                         tiempo_actual = time.time()
                         
-                        # Stats Técnicos (Hover)
+                        # Stats
                         try:
                             total = video.get('length', 0)
-                            if total == 0 and 'files' in video: 
+                            if total == 0 and 'files' in video:
                                 for f in video['files']:
                                     if f.get('length', 0) > total: total = f.get('length', 0)
-                            
                             bajado = video.get('downloaded', 0)
                             velocidad = video.get('downSpeed', 0)
                             porcentaje = int((bajado/total)*100) if total > 0 else 0
@@ -76,15 +73,18 @@ def bucle_logica():
                         except:
                             stats_text = "Stremio RPC"
 
-                        # Detectar cambio de video
-                        if nombre_limpio != ultimo_titulo:
+                        # Cambio de Video
+                        if nombre_semilla != ultimo_titulo:
                             tiempo_inicio = time.time()
-                            # Buscar Metadatos en API
-                            utils.log(f"🔎 Buscando datos: {nombre_limpio}")
-                            meta = utils.obtener_metadatos(nombre_limpio)
-                            poster_actual = meta["poster"]
+                            ultimo_titulo = nombre_semilla
                             
-                            # Calcular barra de tiempo
+                            # V38: Le pasamos el tipo a la API para que busque mejor
+                            utils.log(f"🔎 API: {nombre_semilla} (Tipo: {tipo_video})")
+                            meta = utils.obtener_metadatos(nombre_semilla, tipo_video)
+                            
+                            poster_actual = meta["poster"]
+                            titulo_oficial = meta["name"]
+                            
                             runtime = meta["runtime"]
                             if CONFIG["fixed_duration_minutes"] > 0:
                                 tiempo_fin = tiempo_inicio + (CONFIG["fixed_duration_minutes"] * 60)
@@ -93,33 +93,32 @@ def bucle_logica():
                             else:
                                 tiempo_fin = None
 
-                        # Actualizar Discord
-                        if nombre_limpio != ultimo_titulo or (tiempo_actual - ultima_actualizacion > 15):
+                        # Update Discord
+                        if tiempo_actual - ultima_actualizacion > 15:
                             try:
-                                url_btn = f"https://www.google.com/search?q={urllib.parse.quote(nombre_limpio)}+anime"
+                                url_btn = f"https://www.google.com/search?q={urllib.parse.quote(titulo_oficial)}+anime"
                                 RPC.update(
                                     activity_type=ActivityType.WATCHING,
-                                    details=nombre_limpio,
-                                    state=None, 
+                                    details=titulo_oficial,
+                                    state=None,
                                     large_image=poster_actual,
                                     large_text=stats_text,
                                     start=tiempo_inicio,
                                     end=tiempo_fin,
                                     buttons=[{"label": "Buscar Anime 🔎", "url": url_btn}]
                                 )
-                                ultimo_titulo = nombre_limpio
                                 ultima_actualizacion = tiempo_actual
-                                utils.log(f"Actualizado: {nombre_limpio}")
                             except:
                                 RPC = conectar_discord()
                 else:
-                    pass 
+                    pass
+
             else:
                 if ultimo_titulo != "":
                     try:
                         RPC.clear()
                         ultimo_titulo = ""
-                        utils.log("❌ Stremio cerrado.")
+                        utils.log("❌ Stremio cerrado. Estado limpiado.")
                     except: pass
 
         except Exception as e:
@@ -131,8 +130,7 @@ def bucle_logica():
     try: RPC.close() 
     except: pass
 
-# --- FUNCIONES DEL MENÚ (GUI TRAY) ---
-
+# --- GUI ---
 def salir(icon, item):
     global APP_RUNNING
     APP_RUNNING = False
@@ -142,44 +140,33 @@ def abrir_logs(icon, item):
     os.startfile(config_manager.PATH_LOG)
 
 def abrir_config(icon, item):
-    # LANZAMIENTO INTELIGENTE EN PROCESO SEPARADO
-    # Esto evita que la ventana se congele
     if getattr(sys, 'frozen', False):
-        # Si estamos en modo .exe (futuro)
+        import subprocess
         subprocess.Popen([sys.executable, "gui"])
     else:
-        # Si estamos en modo script (.py)
+        import subprocess
         subprocess.Popen([sys.executable, "gui.py"])
 
-# --- INICIO PRINCIPAL ---
 if __name__ == '__main__':
-    # --- TRUCO PARA GUI EN EXE ---
-    # Si el script recibe el argumento "gui", solo abre la ventana y se cierra.
     if len(sys.argv) > 1 and sys.argv[1] == "gui":
         import gui
         gui.abrir_ventana()
         sys.exit()
-    # -----------------------------
 
     utils.gestionar_logs()
-    
-    # Iniciar hilo lógico (Discord)
     hilo = threading.Thread(target=bucle_logica)
     hilo.daemon = True
     hilo.start()
     
-    # Iniciar GUI (Icono Bandeja)
     try:
         if os.path.exists(config_manager.PATH_ICON):
             img = Image.open(config_manager.PATH_ICON)
-            
             menu = Menu(
                 MenuItem('Configuración ⚙️', abrir_config),
                 MenuItem('Iniciar con Windows', utils.toggle_autostart, checked=lambda item: utils.check_autostart()),
                 MenuItem('Ver Logs', abrir_logs),
                 MenuItem('Salir', salir)
             )
-            
             icon = Icon("StremioRPC", img, "Stremio RPC", menu)
             icon.run()
         else:
