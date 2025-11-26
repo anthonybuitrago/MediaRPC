@@ -77,18 +77,7 @@ class StremioRPCClient:
 
     def _process_video_stats(self, video):
         """Calcula estadísticas de descarga."""
-        try:
-            total = video.get('length', 0)
-            if total == 0 and 'files' in video:
-                for f in video['files']:
-                    if f.get('length', 0) > total: total = f.get('length', 0)
-            
-            downloaded = video.get('downloaded', 0)
-            percentage = int((downloaded/total)*100) if total > 0 else 0
-            
-            return f"💾 {percentage}%"
-        except Exception:
-            return "Stremio RPC"
+        return "Stremio"
 
     def _update_rpc(self, clean_name, video_type, stats_text):
         """Actualiza la presencia de Discord si es necesario."""
