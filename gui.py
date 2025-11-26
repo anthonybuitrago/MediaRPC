@@ -37,36 +37,46 @@ class ConfigWindow(ctk.CTk):
         self.focus_force()
         self.after(500, lambda: self.attributes("-topmost", False))
 
-        # --- UI ---
+        # --- UI PRINCIPAL (TABS) ---
+        self.tabview = ctk.CTkTabview(self, width=380, height=450)
+        self.tabview.pack(padx=10, pady=10, fill="both", expand=True)
+
+        self.tab_config = self.tabview.add("Configuración")
+        self.tab_logs = self.tabview.add("Logs")
+
+        # ==========================================
+        #           PESTAÑA CONFIGURACIÓN
+        # ==========================================
+        
         self.label_title = ctk.CTkLabel(
-            self, text="Ajustes de Stremio RPC", font=("Roboto", 22, "bold")
+            self.tab_config, text="Ajustes de Stremio RPC", font=("Roboto", 22, "bold")
         )
-        self.label_title.pack(pady=20)
+        self.label_title.pack(pady=10)
 
         # ID
-        self.lbl_id = ctk.CTkLabel(self, text="Discord Client ID:")
-        self.lbl_id.pack(anchor="w", padx=30)
-        self.entry_id = ctk.CTkEntry(self, placeholder_text="Ingresa tu ID", width=340)
+        self.lbl_id = ctk.CTkLabel(self.tab_config, text="Discord Client ID:")
+        self.lbl_id.pack(anchor="w", padx=20)
+        self.entry_id = ctk.CTkEntry(self.tab_config, placeholder_text="Ingresa tu ID", width=320)
         self.entry_id.insert(0, self.current_config.get("client_id", ""))
-        self.entry_id.pack(pady=(0, 15))
+        self.entry_id.pack(pady=(0, 10))
 
         # Intervalo
         self.lbl_interval = ctk.CTkLabel(
-            self,
+            self.tab_config,
             text=f"Velocidad de Actualización: {self.current_config.get('update_interval')} seg",
         )
-        self.lbl_interval.pack(anchor="w", padx=30)
+        self.lbl_interval.pack(anchor="w", padx=20)
         self.slider_interval = ctk.CTkSlider(
-            self, from_=2, to=30, number_of_steps=28, command=self.update_slider
+            self.tab_config, from_=2, to=30, number_of_steps=28, command=self.update_slider
         )
         self.slider_interval.set(self.current_config.get("update_interval", 5))
-        self.slider_interval.pack(fill="x", padx=30, pady=(0, 20))
+        self.slider_interval.pack(fill="x", padx=20, pady=(0, 15))
 
         # MODO DE TIEMPO
         self.lbl_time = ctk.CTkLabel(
-            self, text="Estilo de Tiempo:", font=("Roboto", 14, "bold")
+            self.tab_config, text="Estilo de Tiempo:", font=("Roboto", 14, "bold")
         )
-        self.lbl_time.pack(anchor="w", padx=30)
+        self.lbl_time.pack(anchor="w", padx=20)
 
         self.time_mode_var = ctk.StringVar(value="Auto")
         current_fixed = self.current_config.get("fixed_duration_minutes", 0)
@@ -76,42 +86,42 @@ class ConfigWindow(ctk.CTk):
             self.time_mode_var.set("Auto")
 
         self.radio_auto = ctk.CTkRadioButton(
-            self,
+            self.tab_config,
             text="Automático (API / Real)",
             variable=self.time_mode_var,
             value="Auto",
         )
-        self.radio_auto.pack(anchor="w", padx=30, pady=5)
+        self.radio_auto.pack(anchor="w", padx=20, pady=5)
 
         self.radio_anime = ctk.CTkRadioButton(
-            self,
+            self.tab_config,
             text="Forzar Anime (24 min)",
             variable=self.time_mode_var,
             value="Anime",
         )
-        self.radio_anime.pack(anchor="w", padx=30, pady=5)
+        self.radio_anime.pack(anchor="w", padx=20, pady=5)
 
         # OPCIONES SISTEMA
         self.lbl_sys = ctk.CTkLabel(
-            self, text="Opciones de Sistema:", font=("Roboto", 14, "bold")
+            self.tab_config, text="Opciones de Sistema:", font=("Roboto", 14, "bold")
         )
-        self.lbl_sys.pack(anchor="w", padx=30, pady=(20, 5))
+        self.lbl_sys.pack(anchor="w", padx=20, pady=(15, 5))
 
         # Switch: Botón
-        self.switch_btn = ctk.CTkSwitch(self, text="Mostrar Botón 'Buscar Anime'")
+        self.switch_btn = ctk.CTkSwitch(self.tab_config, text="Mostrar Botón 'Buscar Anime'")
         if self.current_config.get("show_search_button", True):
             self.switch_btn.select()
-        self.switch_btn.pack(anchor="w", padx=30, pady=5)
+        self.switch_btn.pack(anchor="w", padx=20, pady=5)
 
         # Switch: Auto-Start (Lee el estado real de Windows)
-        self.switch_autostart = ctk.CTkSwitch(self, text="Iniciar con Windows")
+        self.switch_autostart = ctk.CTkSwitch(self.tab_config, text="Iniciar con Windows")
         if utils.check_autostart():
             self.switch_autostart.select()
-        self.switch_autostart.pack(anchor="w", padx=30, pady=5)
+        self.switch_autostart.pack(anchor="w", padx=20, pady=5)
 
         # Botón Guardar
         self.btn_save = ctk.CTkButton(
-            self,
+            self.tab_config,
             text="GUARDAR CAMBIOS",
             command=self.guardar_datos,
             height=40,
@@ -119,7 +129,40 @@ class ConfigWindow(ctk.CTk):
             fg_color="green",
             hover_color="darkgreen",
         )
-        self.btn_save.pack(fill="x", padx=30, pady=(30, 10))
+        self.btn_save.pack(fill="x", padx=20, pady=(20, 10))
+
+        # ==========================================
+        #           PESTAÑA LOGS
+        # ==========================================
+        self.textbox_logs = ctk.CTkTextbox(self.tab_logs, width=360, height=350)
+        self.textbox_logs.pack(padx=10, pady=10, fill="both", expand=True)
+        
+        self.btn_refresh_logs = ctk.CTkButton(
+            self.tab_logs,
+            text="🔄 Actualizar Logs",
+            command=self.cargar_logs
+        )
+        self.btn_refresh_logs.pack(pady=5)
+        
+        # Cargar logs al iniciar
+        self.cargar_logs()
+
+    def cargar_logs(self):
+        self.textbox_logs.configure(state="normal")
+        self.textbox_logs.delete("0.0", "end")
+        
+        if os.path.exists(config_manager.PATH_LOG):
+            try:
+                with open(config_manager.PATH_LOG, "r", encoding="utf-8") as f:
+                    # Leer últimas 50 líneas para no saturar
+                    lines = f.readlines()[-50:]
+                    self.textbox_logs.insert("0.0", "".join(lines))
+            except Exception as e:
+                self.textbox_logs.insert("0.0", f"Error leyendo logs: {e}")
+        else:
+            self.textbox_logs.insert("0.0", "No hay archivo de logs aún.")
+            
+        self.textbox_logs.configure(state="disabled")
 
     def update_slider(self, value):
         self.lbl_interval.configure(

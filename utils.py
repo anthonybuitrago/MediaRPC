@@ -8,6 +8,7 @@ import os
 import sys
 import subprocess
 import logging
+import psutil
 from config_manager import PATH_LOG
 
 def get_robust_session():
@@ -284,18 +285,11 @@ def set_autostart(enable: bool):
         toggle_autostart(None, None)
 
 def is_process_running(process_name):
-    """Verifica si un proceso está corriendo en Windows usando tasklist."""
+    """Verifica si un proceso está corriendo usando psutil (Más eficiente)."""
     try:
-        # Usamos tasklist para buscar el proceso
-        # /FI "IMAGENAME eq process_name" filtra por nombre
-        # /NH quita el header para facilitar el parsing (aunque aquí solo miramos si hay output)
-        output = subprocess.check_output(
-            f'tasklist /FI "IMAGENAME eq {process_name}" /NH', 
-            shell=True
-        ).decode('utf-8', errors='ignore')
-        
-        # Si el proceso está corriendo, tasklist devuelve una línea con el nombre.
-        # Si no, devuelve "INFO: No tasks are running..."
-        return process_name.lower() in output.lower()
+        for proc in psutil.process_iter(['name']):
+            if proc.info['name'] and proc.info['name'].lower() == process_name.lower():
+                return True
+        return False
     except Exception:
         return False

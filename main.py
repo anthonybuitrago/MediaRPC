@@ -77,6 +77,14 @@ class StremioRPCClient:
 
     def _process_video_stats(self, video):
         """Calcula estadísticas de descarga."""
+        try:
+            total = float(video.get("total", 0))
+            downloaded = float(video.get("downloaded", 0))
+            if total > 0:
+                percentage = (downloaded / total) * 100
+                return f"💾 {percentage:.0f}%"
+        except:
+            pass
         return "Stremio"
 
     def _update_rpc(self, clean_name, video_type, stats_text):
@@ -143,7 +151,7 @@ class StremioRPCClient:
             except Exception: pass
 
     def run_logic(self):
-        logging.info("🚀 Hilo Principal V5.1 (Modular) Iniciado.")
+        logging.info("🚀 Hilo Principal V5.2 (Modular) Iniciado.")
         self.connect_discord()
 
         while self.running:
