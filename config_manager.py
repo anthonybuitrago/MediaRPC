@@ -26,6 +26,16 @@ DEFAULT_CONFIG = {
     "tolerance_seconds": 60,
     "show_search_button": True,  # Control del Botón
     "fixed_duration_minutes": 0,  # 0 = Auto/Real, 24 = Anime
+    "log_max_size_mb": 1,
+    "log_backup_count": 3,
+    "blacklisted_words": [
+        "1080p", "720p", "480p", "4k", "2160p", "1080", "hdrip", "web-dl", "bluray", 
+        "brrip", "bdrip", "x265", "hevc", "h.265", "h265", "265", "x264", "h.264", 
+        "h264", "264", "aac", "ac3", "mp3", "eac3", "flac", "webrip", "dual audio", 
+        "multi", "10bit", "8bit", "hdr", "hdr10", "dv", "dolby", "atmos", "anime time", 
+        "eng sub", "subs", "amzn", "nf", "hulu", "disney", "hbo", "flux", "season", 
+        "episode", "capitulo", "temporada", "subtitulado", "DDP5.1"
+    ]
 }
 
 

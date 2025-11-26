@@ -15,11 +15,17 @@ import utils
 import gui
 
 # --- CONFIGURACIÓN DE LOGGING ---
-# Rotación: 1 MB por archivo, máximo 3 archivos de respaldo
+# Cargar configuración primero para obtener parámetros de log
+config = config_manager.cargar_config()
+
+# Rotación: Leída desde config (Default: 1 MB, 3 backups)
+log_size = config.get("log_max_size_mb", 1) * 1024 * 1024
+log_backups = config.get("log_backup_count", 3)
+
 handler = RotatingFileHandler(
     config_manager.PATH_LOG, 
-    maxBytes=1*1024*1024, 
-    backupCount=3, 
+    maxBytes=log_size, 
+    backupCount=log_backups, 
     encoding='utf-8'
 )
 logging.basicConfig(
