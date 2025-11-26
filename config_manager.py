@@ -4,13 +4,20 @@ import sys
 
 # --- RUTAS DEL SISTEMA ---
 if getattr(sys, 'frozen', False):
+    # Para archivos que deben persistir (config, logs), usamos la carpeta del ejecutable
     BASE_DIR = os.path.dirname(sys.executable)
+    # Para recursos internos (iconos), usamos la carpeta temporal de PyInstaller
+    if hasattr(sys, '_MEIPASS'):
+        ASSET_DIR = sys._MEIPASS
+    else:
+        ASSET_DIR = os.path.dirname(sys.executable)
 else:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    ASSET_DIR = BASE_DIR
 
 PATH_CONFIG = os.path.join(BASE_DIR, "config.json")
 PATH_LOG = os.path.join(BASE_DIR, "stremio_log.txt")
-PATH_ICON = os.path.join(BASE_DIR, "assets", "rpc.ico")
+PATH_ICON = os.path.join(ASSET_DIR, "assets", "rpc.ico")
 
 # --- CONFIGURACIÓN POR DEFECTO V5 ---
 DEFAULT_CONFIG = {
