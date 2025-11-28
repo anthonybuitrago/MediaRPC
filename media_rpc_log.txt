@@ -765,3 +765,65 @@
 [04:07:22] INFO: ℹ️ ⏱️ Nuevo episodio detectado (- 05.). Reiniciando tiempo.
 [04:09:25] INFO: 🔎 API: Haikyuu!! (auto)
 [04:24:45] INFO: ⚠️ API desconectada pero Stremio sigue abierto. Manteniendo RPC.
+[16:06:37] INFO: 🚀 Media RPC v5.2 Iniciado
+[16:06:55] INFO: ℹ️ Conectando a Discord (ID: 1441601634374385696)...
+[16:06:55] INFO: ✅ Conectado a Discord (Stremio)
+[16:06:55] INFO: 🔎 API: Keijo!!!!!!!! (serie)
+[16:06:55] INFO: ℹ️ ⏱️ Nuevo episodio detectado (- 01.). Reiniciando tiempo.
+[16:07:26] INFO: 🔌 Cambiando identidad RPC (Nuevo ID: 1443754486945415198)...
+[16:07:26] INFO: ℹ️ Conectando a Discord (ID: 1443754486945415198)...
+[16:07:26] INFO: ✅ Conectado a Discord (Música)
+[16:07:27] INFO: ℹ️ 🎵 Música detectada: エースの資質 - ASAMI TACHIBANA
+[16:07:43] INFO: ℹ️ 🎵 Música detectada: チームの地力 - Yuki Hayashi
+[16:10:31] INFO: 🔌 Cambiando identidad RPC (Nuevo ID: 1441601634374385696)...
+[16:10:31] INFO: ℹ️ Conectando a Discord (ID: 1441601634374385696)...
+[16:10:31] INFO: ✅ Conectado a Discord (Stremio)
+[16:14:32] INFO: ℹ️ Conectando a Discord (ID: 1443754486945415198)...
+[16:14:32] INFO: ✅ Conectado a Discord (Música)
+[16:14:32] INFO: ℹ️ 🎵 Música detectada: 繋ぐということ - Yuki Hayashi
+[16:14:48] INFO: ℹ️ 🎵 Música detectada: 勝者と敗者 - Yuki Hayashi
+[16:15:04] INFO: ℹ️ 🎵 Música detectada: 神業速攻 - Yuki Hayashi
+[16:15:20] INFO: ℹ️ 🎵 Música detectada: “1点” - Yuki Hayashi
+[16:17:54] INFO: ℹ️ 🎵 Música detectada: 粘り - ASAMI TACHIBANA
+[16:18:33] INFO: 🚀 Media RPC v5.2 Iniciado
+[16:21:07] ERROR: ❌ Otra instancia ya está corriendo. Cerrando...
+[16:27:41] INFO: 🚀 Media RPC v5.2 Iniciado
+[16:27:41] INFO: ℹ️ Conectando a Discord (ID: 1443754486945415198)...
+[16:27:41] INFO: ✅ Conectado a Discord (Música)
+[16:27:42] INFO: ℹ️ 🎵 Música detectada: The 7 Seas - F-777
+[16:28:09] ERROR: ❌ Otra instancia ya está corriendo. Cerrando...
+[16:28:16] ERROR: ❌ Otra instancia ya está corriendo. Cerrando...
+[16:28:32] ERROR: ❌ Otra instancia ya está corriendo. Cerrando...
+[16:29:00] INFO: ℹ️ 🎵 Música detectada: Bob-Omb Battlefield (From "Super Mario 64') - The 8-Bit Big Band
+[16:29:47] INFO: ℹ️ 🎵 Música detectada: Merry-Go-Round of Life (from 'Howl's Moving Castle') - Joe Hisaishi
+[16:30:56] INFO: 🚀 Media RPC v5.2 Iniciado
+[16:30:56] INFO: ℹ️ Conectando a Discord (ID: 1443754486945415198)...
+[16:30:56] INFO: ✅ Conectado a Discord (Música)
+[16:30:57] INFO: ℹ️ 🎵 Música detectada: Merry-Go-Round of Life (from 'Howl's Moving Castle') - Joe Hisaishi
+[16:32:45] INFO: ℹ️ 🎵 Música detectada: Just disappear - Takayan
+[16:35:19] INFO: ℹ️ 🎵 Música detectada: Comedy - Gen Hoshino
+[16:37:02] INFO: 🚀 Media RPC v5.2 Iniciado
+[16:37:02] INFO: ℹ️ Conectando a Discord (ID: 1443754486945415198)...
+[16:37:02] INFO: ✅ Conectado a Discord (Música)
+[16:37:03] INFO: ℹ️ 🎵 Música detectada: Comedy - Gen Hoshino
+[16:37:20] INFO: ℹ️ 🎵 Música detectada: Just disappear - Takayan
+[16:39:32] INFO: 🚀 Media RPC v5.2 Iniciado
+[16:39:32] INFO: ℹ️ Conectando a Discord (ID: 1443754486945415198)...
+[16:39:32] INFO: ✅ Conectado a Discord (Música)
+[16:39:34] INFO: ℹ️ 🎵 Música detectada: Just disappear - Takayan
+[16:39:50] INFO: ℹ️ 🎵 Música detectada: Comedy - Gen Hoshino
+[16:43:21] INFO: 🚀 Media RPC v5.2 Iniciado
+[16:43:21] INFO: ℹ️ Conectando a Discord (ID: 1443754486945415198)...
+[16:43:21] INFO: ✅ Conectado a Discord (Música)
+[16:43:22] INFO: ℹ️ 🎵 Música detectada: Comedy - Gen Hoshino
+[16:43:39] INFO: ℹ️ 🧹 Limpiando actividad de música...
+[16:43:55] INFO: ✅ Stremio detectado (API conectada)
+[16:43:55] INFO: 🔌 Cambiando identidad RPC (Nuevo ID: 1441601634374385696)...
+[16:43:55] INFO: ℹ️ Conectando a Discord (ID: 1441601634374385696)...
+[16:43:55] INFO: ✅ Conectado a Discord (Stremio)
+[16:43:55] INFO: 🔎 API: Keijo!!!!!!!! (serie)
+[16:43:55] INFO: ℹ️ ⏱️ Nuevo episodio detectado (- 01.). Reiniciando tiempo.
+[16:45:45] INFO: ❌ Stremio cerrado o API desconectada
+[16:47:10] INFO: ℹ️ Conectando a Discord (ID: 1443754486945415198)...
+[16:47:10] INFO: ✅ Conectado a Discord (Música)
+[16:47:11] INFO: ℹ️ 🎵 Música detectada: Mephisto - QUEEN BEE

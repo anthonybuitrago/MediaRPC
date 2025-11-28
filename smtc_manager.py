@@ -4,8 +4,10 @@ import logging
 import os
 import sys
 
+import config_manager
+
 # Path to the PowerShell script
-SCRIPT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "get_media_info.ps1")
+SCRIPT_PATH = os.path.join(config_manager.ASSET_DIR, "get_media_info.ps1")
 
 def get_media_info():
     """

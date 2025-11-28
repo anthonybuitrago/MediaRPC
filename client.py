@@ -26,7 +26,8 @@ class StremioRPCClient:
         self.official_title = ""
         self.last_source = None # "stremio" or "music"
         self.current_client_id = None
-        
+        self.stremio_was_connected = False # [NUEVO] Para logs de conexión
+
     def connect_discord(self, target_id=None):
         """Conecta a Discord con el ID especificado. Si cambia el ID, reconecta."""
         if target_id is None:
@@ -309,7 +310,7 @@ class StremioRPCClient:
         if os.name == 'nt':
             os.system("title Media RPC")
             
-        logging.info("🚀 Media RPC v5.2 Iniciado")
+        logging.info("🚀 Media RPC v5.3 Iniciado")
         # [OPTIMIZACION] No conectamos al inicio por defecto.
         # Esperamos a ver qué se está reproduciendo para conectar al ID correcto.
 
@@ -378,6 +379,15 @@ class StremioRPCClient:
                 if not music_active:
                     # A. Intentar leer Stremio
                     connected, data = self._fetch_stremio_data()
+                    
+                    # [NUEVO] Log de estado de conexión
+                    if connected and not self.stremio_was_connected:
+                        logging.info("✅ Stremio detectado (API conectada)")
+                        self.stremio_was_connected = True
+                    elif not connected and self.stremio_was_connected:
+                        logging.info("❌ Stremio cerrado o API desconectada")
+                        self.stremio_was_connected = False
+
                     if connected and len(data) > 0:
                         # [MODIFICADO] Selección inteligente de candidato
                         video = self._select_best_video(data)

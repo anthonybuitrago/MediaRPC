@@ -84,6 +84,10 @@ def open_config(icon, item):
         subprocess.Popen([sys.executable, "gui.py"])
 
 if __name__ == '__main__':
+    if len(sys.argv) > 1 and sys.argv[1] == "gui":
+        gui.abrir_ventana()
+        sys.exit()
+
     # [NUEVO] Single Instance Check (Mutex)
     # Evita que se abran múltiples instancias
     import ctypes
@@ -92,13 +96,9 @@ if __name__ == '__main__':
     if kernel32.GetLastError() == 183: # ERROR_ALREADY_EXISTS
         logging.error("❌ Otra instancia ya está corriendo. Cerrando...")
         sys.exit(0)
-
-    if len(sys.argv) > 1 and sys.argv[1] == "gui":
-        gui.abrir_ventana()
-        sys.exit()
     
     # [NUEVO] Chequeo de actualizaciones
-    CURRENT_VERSION = "v5.2"
+    CURRENT_VERSION = "v5.3"
     has_update, new_version = utils.check_for_updates(CURRENT_VERSION)
     if has_update:
         logging.warning(f"⚠️ ¡Nueva versión disponible: {new_version}!")

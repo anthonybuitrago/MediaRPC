@@ -56,6 +56,32 @@ def search_metadata(query):
                 METADATA_CACHE[query] = result
                 return result
 
+        # [NUEVO] Fallback: Intentar en tienda de Japón (JP) para música asiática/anime
+        url_jp = f"{url}&country=JP"
+        resp = requests.get(url_jp, timeout=2)
+        if resp.status_code == 200:
+            data = resp.json()
+            if data["resultCount"] > 0:
+                result = _process_itunes_result(data["results"][0])
+                METADATA_CACHE[query] = result
+                return result
+
+        # [NUEVO] Fallback Final: Deezer API (Excelente para música internacional/indie)
+        url_deezer = f"https://api.deezer.com/search?q={urllib.parse.quote(query)}"
+        resp = requests.get(url_deezer, timeout=2)
+        if resp.status_code == 200:
+            data = resp.json()
+            if "data" in data and len(data["data"]) > 0:
+                item = data["data"][0]
+                result = {
+                    "cover_url": item["album"]["cover_xl"],
+                    "artist": item["artist"]["name"],
+                    "title": item["title"],
+                    "album": item["album"]["title"]
+                }
+                METADATA_CACHE[query] = result
+                return result
+
     except Exception as e:
         logging.error(f"Error buscando metadatos: {e}")
     
