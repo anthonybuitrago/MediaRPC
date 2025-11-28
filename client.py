@@ -364,7 +364,7 @@ class StremioRPCClient:
                         self.last_media_name = music_info['title']
                         self.last_artist = music_info['artist']
                         
-                        os.system('cls' if os.name == 'nt' else 'clear')
+                        # os.system('cls' if os.name == 'nt' else 'clear')
                         logging.info(f"🎵 Música detectada: {music_info['title']} - {music_info['artist']}")
 
                         large_img = cover_url if cover_url else "music_icon"
