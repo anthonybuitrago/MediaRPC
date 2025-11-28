@@ -35,7 +35,7 @@ class ConfigWindow(ctk.CTk):
         self.current_config = config_manager.cargar_config()
 
         self.title("Media RPC - Configuración")
-        self.geometry("400x450") # [MODIFICADO] Más compacto sin preview
+        self.geometry("400x500") # [MODIFICADO] Más alto para evitar corte de footer
         self.resizable(False, False)
 
         if os.path.exists(config_manager.PATH_ICON):
