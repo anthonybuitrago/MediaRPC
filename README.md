@@ -1,3 +1,15 @@
+# 🚀 MediaRPC v5.3
+
+**MediaRPC** is a lightweight, "set and forget" Discord Rich Presence (RPC) tool for **Stremio** and **Music Players** (YouTube Music, Spotify, etc.) on Windows.
+
+It automatically detects what you are watching or listening to and displays it on your Discord profile with high-quality cover art and metadata.
+
+## ✨ Features
+
+- **🎬 Stremio Support**: Displays the movie or series you are watching, including episode details and progress.
+- **🎵 Music Support**: Detects music from media keys (YouTube Music, Spotify, etc.) and displays it with cover art.
+- **🖼️ Smart Metadata**:
+  - Fetches high-quality posters from **Cinemeta** (for video).
   - Fetches album art from **iTunes (US/JP)** and **Deezer** (for music).
 - **⚡ Performance**: Optimized to run silently in the background with minimal resource usage.
 - **🔄 Robustness**: Auto-reconnects if Discord or Stremio is restarted.

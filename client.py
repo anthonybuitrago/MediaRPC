@@ -306,9 +306,9 @@ class StremioRPCClient:
         return best_candidate
 
     def run_logic(self):
-        # [COSMETICO] Título de ventana
-        if os.name == 'nt':
-            os.system("title Media RPC")
+        # [COSMETICO] Título de ventana (Eliminado para evitar flash)
+        # if os.name == 'nt':
+        #    os.system("title Media RPC")
             
         logging.info("🚀 Media RPC v5.3 Iniciado")
         # [OPTIMIZACION] No conectamos al inicio por defecto.

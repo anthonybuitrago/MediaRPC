@@ -313,7 +313,7 @@ def toggle_autostart(icon, item):
             
             subprocess.run(
                 ["powershell", "-Command", ps_script], 
-                creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+                creationflags=0x08000000 # CREATE_NO_WINDOW
             )
             logging.info("✅ Auto-start activado (Modo Silencioso).")
         except Exception as e:
