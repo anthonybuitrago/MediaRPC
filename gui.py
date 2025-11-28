@@ -35,7 +35,14 @@ class ConfigWindow(ctk.CTk):
         self.current_config = config_manager.cargar_config()
 
         self.title("Media RPC - Configuración")
-        self.geometry("400x500") # [MODIFICADO] Más alto para evitar corte de footer
+        # Centrar ventana
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        window_width = 400
+        window_height = 550 # Un poco más alto para los grupos
+        x_cordinate = int((screen_width/2) - (window_width/2))
+        y_cordinate = int((screen_height/2) - (window_height/2))
+        self.geometry(f"{window_width}x{window_height}+{x_cordinate}+{y_cordinate}")
         self.resizable(False, False)
 
         if os.path.exists(config_manager.PATH_ICON):
@@ -67,83 +74,84 @@ class ConfigWindow(ctk.CTk):
         self.label_title = ctk.CTkLabel(
             self.tab_config, text="Media RPC", font=("Roboto", 24, "bold"), text_color="white"
         )
-        self.label_title.pack(pady=(10, 15))
+        self.label_title.pack(pady=(5, 10))
 
-        # OPCIONES SISTEMA
-        self.frame_opts = ctk.CTkFrame(self.tab_config, fg_color="transparent")
-        self.frame_opts.pack(fill="x", padx=20)
+        # --- GRUPO APARIENCIA ---
+        self.frame_appearance = ctk.CTkFrame(self.tab_config)
+        self.frame_appearance.pack(fill="x", padx=10, pady=5)
+        
+        ctk.CTkLabel(self.frame_appearance, text="Apariencia", font=("Roboto", 12, "bold"), text_color="gray").pack(anchor="w", padx=10, pady=(5,0))
 
-        # Switch: Auto-Start
-        self.switch_autostart = ctk.CTkSwitch(
-            self.frame_opts, 
-            text="Iniciar con Windows",
-            progress_color=STREMIO_PURPLE,
-            font=("Roboto", 14)
-        )
-        if utils.check_autostart():
-            self.switch_autostart.select()
-        self.switch_autostart.pack(anchor="w", pady=10)
-
-        # Switch: Botón
         self.switch_btn = ctk.CTkSwitch(
-            self.frame_opts, 
+            self.frame_appearance, 
             text="Mostrar Botón 'Buscar Anime'",
             progress_color=STREMIO_PURPLE,
-            font=("Roboto", 14)
+            font=("Roboto", 13)
         )
         if self.current_config.get("show_search_button", True):
             self.switch_btn.select()
-        self.switch_btn.pack(anchor="w", pady=10)
+        self.switch_btn.pack(anchor="w", padx=10, pady=10)
 
-        # Switch: Music RPC
         self.switch_music = ctk.CTkSwitch(
-            self.frame_opts, 
+            self.frame_appearance, 
             text="Activar Detección de Música",
             progress_color=STREMIO_PURPLE,
-            font=("Roboto", 14)
+            font=("Roboto", 13)
         )
         if self.current_config.get("enable_music_rpc", True):
             self.switch_music.select()
-        self.switch_music.pack(anchor="w", pady=10)
+        self.switch_music.pack(anchor="w", padx=10, pady=(0, 10))
 
-        # -----------------------
+        # --- GRUPO SISTEMA ---
+        self.frame_system = ctk.CTkFrame(self.tab_config)
+        self.frame_system.pack(fill="x", padx=10, pady=10)
 
-        # Botón Actualizar
+        ctk.CTkLabel(self.frame_system, text="Sistema", font=("Roboto", 12, "bold"), text_color="gray").pack(anchor="w", padx=10, pady=(5,0))
+
+        self.switch_autostart = ctk.CTkSwitch(
+            self.frame_system, 
+            text="Iniciar con Windows",
+            progress_color=STREMIO_PURPLE,
+            font=("Roboto", 13)
+        )
+        if utils.check_autostart():
+            self.switch_autostart.select()
+        self.switch_autostart.pack(anchor="w", padx=10, pady=10)
+
         self.btn_update = ctk.CTkButton(
-            self.tab_config,
+            self.frame_system,
             text="⬇️ Buscar Actualizaciones",
             command=self.buscar_actualizaciones,
-            height=35,
+            height=30,
             font=("Roboto", 12),
             fg_color="#333333",
             hover_color="#444444"
         )
-        self.btn_update.pack(fill="x", padx=20, pady=(20, 5))
+        self.btn_update.pack(fill="x", padx=10, pady=(5, 5))
 
-        # Botón Reiniciar RPC
         self.btn_restart = ctk.CTkButton(
-            self.tab_config,
+            self.frame_system,
             text="♻️ Reiniciar Conexión RPC",
             command=self.reiniciar_rpc,
-            height=35,
+            height=30,
             font=("Roboto", 12),
             fg_color="#333333",
             hover_color="#444444"
         )
-        self.btn_restart.pack(fill="x", padx=20, pady=(5, 5))
+        self.btn_restart.pack(fill="x", padx=10, pady=(5, 10))
 
         # Botón Guardar
         self.btn_save = ctk.CTkButton(
             self.tab_config,
             text="GUARDAR CAMBIOS",
             command=self.guardar_datos,
-            height=45,
-            font=("Roboto", 15, "bold"),
+            height=40,
+            font=("Roboto", 14, "bold"),
             fg_color=STREMIO_PURPLE,
             hover_color=STREMIO_PURPLE_HOVER,
             corner_radius=10
         )
-        self.btn_save.pack(fill="x", padx=20, pady=(10, 10))
+        self.btn_save.pack(fill="x", padx=20, pady=(10, 5))
 
         # Link GitHub
         self.lbl_github = ctk.CTkLabel(
