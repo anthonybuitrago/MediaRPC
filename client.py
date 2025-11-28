@@ -80,7 +80,7 @@ class StremioRPCClient:
                 return f"💾 {percentage:.0f}%"
         except:
             pass
-        return "Stremio"
+        return None
 
     def _update_rpc(self, clean_name, video_type, stats_text, raw_name):
         """Actualiza la presencia de Discord si es necesario."""
@@ -143,6 +143,8 @@ class StremioRPCClient:
                     state=None, # Eliminado a petición del usuario
                     large_image=self.current_poster,
                     large_text=stats_text,
+                    small_image="stremio_logo",
+                    small_text="Stremio",
                     start=self.start_time,
                     buttons=buttons_list
                 )
