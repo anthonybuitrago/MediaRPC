@@ -17,7 +17,7 @@ def get_media_info():
     try:
         # Run PowerShell script
         # We use -ExecutionPolicy Bypass to ensure it runs
-        cmd = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", SCRIPT_PATH]
+        cmd = ["powershell", "-NoProfile", "-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass", "-File", SCRIPT_PATH]
         
         # Hide window on Windows
         startupinfo = None

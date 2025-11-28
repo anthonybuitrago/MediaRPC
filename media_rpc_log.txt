@@ -833,3 +833,8 @@
 [16:51:29] INFO: ℹ️ 🎵 Música detectada: 大脳的なランデブー - Kanaria
 [16:53:02] INFO: ℹ️ 🎵 Música detectada: NIGHT DANCER - imase
 [16:56:37] INFO: ℹ️ 🎵 Música detectada: 祈りの唄 - 大原ゆい子
+[17:00:30] INFO: 🚀 Media RPC v5.3 Iniciado
+[17:00:30] INFO: ℹ️ Conectando a Discord (ID: 1443754486945415198)...
+[17:00:30] INFO: ✅ Conectado a Discord (Música)
+[17:00:31] INFO: ℹ️ 🎵 Música detectada: 祈りの唄 - 大原ゆい子
+[17:01:03] INFO: ℹ️ 🎵 Música detectada: 怪物 - YOASOBI
