@@ -1,10 +1,7 @@
 import time
 import threading
-import requests
-import urllib.parse
 import logging
 from logging.handlers import RotatingFileHandler
-from pypresence import Presence, ActivityType
 from pystray import Icon, MenuItem, Menu
 from PIL import Image
 import os
@@ -13,6 +10,11 @@ import sys
 import config_manager
 import utils
 import gui
+from client import StremioRPCClient
+
+# [FIX] Forzar UTF-8 en consola Windows para evitar errores con emojis
+if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 # --- CONFIGURACIÓN DE LOGGING ---
 class CustomFormatter(logging.Formatter):
@@ -58,241 +60,8 @@ logging.basicConfig(
     force=True
 )
 
-class StremioRPCClient:
-    def __init__(self):
-        self.running = True
-        self.config = config_manager.cargar_config()
-        self.rpc = None
-        self.last_title = ""
-        self.last_raw_title = ""
-        self.last_update = 0
-        self.start_time = None
-        self.end_time = None
-        self.current_poster = "stremio_logo"
-        self.official_title = ""
-        
-    def connect_discord(self):
-        self.rpc = None
-        while self.rpc is None and self.running:
-            try:
-                logging.info("Conectando a Discord...")
-                self.rpc = Presence(self.config["client_id"])
-                self.rpc.connect()
-                logging.info("✅ Conectado a Discord")
-            except Exception as e:
-                logging.error(f"Error conectando a Discord: {e}")
-                time.sleep(10)
-        return self.rpc
-
-    def _fetch_stremio_data(self):
-        """Intenta obtener datos de Stremio. Retorna (connected, data)."""
-        try:
-            # Usamos la sesión robusta de utils
-            session = utils.get_robust_session()
-            response = session.get("http://127.0.0.1:11470/stats.json", timeout=3)
-            if response.status_code == 200:
-                return True, response.json()
-        except requests.RequestException:
-            pass
-        return False, {}
-
-    def _process_video_stats(self, video):
-        """Calcula estadísticas de descarga."""
-        try:
-            total = float(video.get("total", 0))
-            downloaded = float(video.get("downloaded", 0))
-            if total > 0:
-                percentage = (downloaded / total) * 100
-                return f"💾 {percentage:.0f}%"
-        except:
-            pass
-        return "Stremio"
-
-    def _update_rpc(self, clean_name, video_type, stats_text, raw_name):
-        """Actualiza la presencia de Discord si es necesario."""
-        
-        # [MODIFICADO] Asegurar conexión si se cerró previamente para historial
-        if self.rpc is None:
-            self.connect_discord()
-
-        current_time = time.time()
-
-        # Si cambió el título, buscamos nuevos metadatos
-        if clean_name != self.last_title:
-            self.last_title = clean_name
-            
-            logging.info(f"🔎 API: {clean_name} ({video_type})")
-            meta = utils.obtener_metadatos(clean_name, video_type)
-            
-            self.current_poster = meta["poster"]
-            self.official_title = meta["name"]
-
-        # [NUEVO] Si cambió el archivo/episodio real, reiniciamos el tiempo
-        if raw_name != self.last_raw_title:
-            self.last_raw_title = raw_name
-            self.start_time = time.time()
-            logging.info(f"⏱️ Nuevo episodio detectado. Reiniciando tiempo.")
-
-        # Actualizamos RPC cada 15 segundos
-        if current_time - self.last_update > 15:
-            try:
-                buttons_list = None
-                if self.config.get("show_search_button", True):
-                    url_btn = f"https://www.google.com/search?q={urllib.parse.quote(self.official_title)}+anime"
-                    buttons_list = [{"label": "Buscar Anime 🔎", "url": url_btn}]
-
-                self.rpc.update(
-                    activity_type=ActivityType.WATCHING,
-                    details=self.official_title,
-                    state=None,
-                    large_image=self.current_poster,
-                    large_text=stats_text,
-                    start=self.start_time,
-                    buttons=buttons_list
-                )
-                self.last_update = current_time
-            except Exception as e:
-                logging.error(f"Error actualizando RPC: {e}")
-                self.connect_discord()
-
-    def _clear_rpc(self):
-        """Limpia la presencia si Stremio se detuvo."""
-        if self.last_title != "":
-            try:
-                # [MODIFICADO] Antes de limpiar, verificamos si el proceso sigue vivo.
-                # Verificamos múltiples nombres de proceso para cubrir diferentes versiones.
-                if (utils.is_process_running("stremio.exe") or 
-                    utils.is_process_running("stremio-runtime.exe") or 
-                    utils.is_process_running("stremio-shell-ng.exe")):
-                    logging.info("⚠️ API desconectada pero Stremio sigue abierto. Manteniendo RPC.")
-                    return
-
-                # [MODIFICADO] Cerramos conexión en lugar de limpiar para que quede en "Actividad Reciente"
-                if self.rpc:
-                    self.rpc.close()
-                    self.rpc = None
-                
-                self.last_title = ""
-                logging.info("❌ Stremio cerrado. Conexión cerrada para preservar historial.")
-            except Exception: pass
-
-    def _get_active_file_name(self, data):
-        """Intenta detectar el archivo exacto que se está reproduciendo."""
-        try:
-            video = list(data.values())[-1]
-            files = video.get('files', [])
-            selections = video.get('selections', [])
-            
-            if not files or not selections:
-                return None
-
-            # 1. Calcular tamaño total y buscar índice de pieza máximo
-            total_size = sum(f.get('length', 0) for f in files)
-            max_piece = 0
-            prio_piece = -1
-            
-            max_prio = 0
-            for s in selections:
-                if s.get('to', 0) > max_piece:
-                    max_piece = s['to']
-                
-                # [MODIFICADO] Buscamos la pieza con mayor prioridad (>0)
-                # Antes solo buscaba priority == 1, lo que podía fallar si Stremio usaba otro valor
-                prio = s.get('priority', 0)
-                if prio > max_prio:
-                    max_prio = prio
-                    prio_piece = s.get('from', 0)
-            
-            # logging.info(f"DEBUG: MaxPiece={max_piece}, PrioPiece={prio_piece}, Selections={len(selections)}")
-            
-            if prio_piece == -1: return None
-            if max_piece == 0: return None
-
-            # 2. Estimar tamaño de pieza (Upper Bound Logic)
-            # El tamaño de pieza debe ser tal que piece_size * max_piece <= total_size
-            est_max_piece_size = total_size / max_piece
-            
-            # Tamaños comunes de pieza (256KB a 16MB)
-            common_sizes = [256*1024, 512*1024, 1024*1024, 2*1024*1024, 4*1024*1024, 8*1024*1024, 16*1024*1024]
-            
-            # Buscar el tamaño más grande que sea válido
-            piece_size = common_sizes[0]
-            for size in common_sizes:
-                if size <= est_max_piece_size:
-                    piece_size = size
-                else:
-                    break
-            
-            # 3. Calcular offset y buscar archivo
-            current_offset = prio_piece * piece_size
-            
-            for f in files:
-                start = f.get('offset', 0)
-                length = f.get('length', 0)
-                if start <= current_offset < (start + length):
-                    return f.get('name')
-                    
-        except Exception as e:
-            logging.error(f"Error detectando archivo: {e}")
-            
-        return None
-
-    def run_logic(self):
-        logging.info("🚀 Stremio RPC v5.2 Iniciado")
-        self.connect_discord()
-
-        while self.running:
-            # 1. Recargar Configuración Dinámica
-            self.config = config_manager.cargar_config()
-
-            # 2. Chequear Flag de Reinicio
-            flag_path = os.path.join(os.path.dirname(config_manager.PATH_CONFIG), "rpc_restart.flag")
-            if os.path.exists(flag_path):
-                logging.info("♻️ Reiniciando RPC a petición del usuario...")
-                try:
-                    if self.rpc: self.rpc.close()
-                    os.remove(flag_path)
-                except: pass
-                self.connect_discord()
-
-            try:
-                connected, data = self._fetch_stremio_data()
-
-                if connected and len(data) > 0:
-                    video = list(data.values())[-1]
-                    
-                    # Intentar detectar el archivo específico (Episodio)
-                    active_file = self._get_active_file_name(data)
-                    
-                    if active_file:
-                        raw_name = active_file
-                        # logging.info(f"📁 Archivo detectado: {active_file}")
-                    else:
-                        raw_name = str(video.get('name', ''))
-                    
-                    if raw_name:
-                        clean_name, video_type = utils.extraer_datos_video(raw_name)
-                        if clean_name:
-                            stats_text = self._process_video_stats(video)
-                            self._update_rpc(clean_name, video_type, stats_text, raw_name)
-                    else:
-                        # Stremio abierto pero sin reproducir nada
-                        pass
-                else:
-                    self._clear_rpc()
-
-            except Exception as e:
-                logging.error(f"Error Loop: {e}")
-                time.sleep(self.config["update_interval"])
-            
-            time.sleep(self.config["update_interval"])
-
-        try: 
-            if self.rpc: self.rpc.close() 
-        except Exception: pass
-
-    def stop(self):
-        self.running = False
+# Silenciar warnings de conexión de urllib3 (requests)
+logging.getLogger("urllib3").setLevel(logging.ERROR)
 
 def exit_app(icon, item, client):
     client.stop()
@@ -315,10 +84,26 @@ def open_config(icon, item):
         subprocess.Popen([sys.executable, "gui.py"])
 
 if __name__ == '__main__':
+    # [NUEVO] Single Instance Check (Mutex)
+    # Evita que se abran múltiples instancias
+    import ctypes
+    kernel32 = ctypes.windll.kernel32
+    mutex = kernel32.CreateMutexW(None, False, "Global\\MediaRPC_Instance_Mutex_v5")
+    if kernel32.GetLastError() == 183: # ERROR_ALREADY_EXISTS
+        logging.error("❌ Otra instancia ya está corriendo. Cerrando...")
+        sys.exit(0)
+
     if len(sys.argv) > 1 and sys.argv[1] == "gui":
         gui.abrir_ventana()
         sys.exit()
     
+    # [NUEVO] Chequeo de actualizaciones
+    CURRENT_VERSION = "v5.2"
+    has_update, new_version = utils.check_for_updates(CURRENT_VERSION)
+    if has_update:
+        logging.warning(f"⚠️ ¡Nueva versión disponible: {new_version}!")
+        logging.warning(f"Descárgala en: https://github.com/anthonybuitrago/stremio-discord-rpc/releases")
+
     client = StremioRPCClient()
     
     thread = threading.Thread(target=client.run_logic)
@@ -335,7 +120,7 @@ if __name__ == '__main__':
                 MenuItem('♻️ Reiniciar RPC', restart_rpc_tray),
                 MenuItem('❌ Salir', lambda icon, item: exit_app(icon, item, client))
             )
-            icon = Icon("StremioRPC", img, "Stremio", menu)
+            icon = Icon("MediaRPC", img, "Media RPC", menu)
             icon.run()
         else:
             while client.running: time.sleep(1)

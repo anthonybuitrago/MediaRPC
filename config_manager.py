@@ -16,13 +16,13 @@ else:
     ASSET_DIR = BASE_DIR
 
 PATH_CONFIG = os.path.join(BASE_DIR, "config.json")
-PATH_LOG = os.path.join(BASE_DIR, "stremio_log.txt")
+PATH_LOG = os.path.join(BASE_DIR, "media_rpc_log.txt")
 PATH_ICON = os.path.join(ASSET_DIR, "assets", "rpc.ico")
 
 # --- CONFIGURACIÓN POR DEFECTO V5 ---
 DEFAULT_CONFIG = {
-    "client_id": "1441601634374385696",
-    "update_interval": 15,
+    "client_id": "1309362622566662195",
+    "update_interval": 2.5, # Segundos entre actualizaciones (Más rápido para música)
     "tolerance_seconds": 60,
     "show_search_button": True,  # Control del Botón
     "fixed_duration_minutes": 0,  # 0 = Auto/Real, 24 = Anime
@@ -35,7 +35,9 @@ DEFAULT_CONFIG = {
         "multi", "10bit", "8bit", "hdr", "hdr10", "dv", "dolby", "atmos", "anime time", 
         "eng sub", "subs", "amzn", "nf", "hulu", "disney", "hbo", "flux", "season", 
         "episode", "capitulo", "temporada", "subtitulado", "DDP5.1"
-    ]
+    ],
+    "enable_music_rpc": True,
+    "music_client_id": "1443754486945415198" # ID para mostrar "Listening to Youtube Music"
 }
 
 

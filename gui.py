@@ -16,6 +16,12 @@ STREMIO_PURPLE = "#5A4FCF"
 STREMIO_PURPLE_HOVER = "#483D8B"
 STREMIO_BG = "#151515"
 
+# Colores Discord
+DISCORD_BG = "#313338" # Fondo oscuro moderno
+DISCORD_CARD_BG = "#111214" # Fondo de la tarjeta (perfil)
+DISCORD_TEXT_HEADER = "#F2F3F5"
+DISCORD_TEXT_NORMAL = "#DBDEE1"
+
 class ConfigWindow(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -28,8 +34,8 @@ class ConfigWindow(ctk.CTk):
 
         self.current_config = config_manager.cargar_config()
 
-        self.title("Configuración - Stremio RPC")
-        self.geometry("350x480") # Un poco más alto para los nuevos botones
+        self.title("Media RPC - Configuración")
+        self.geometry("400x650") # [MODIFICADO] Más alto para el preview
         self.resizable(False, False)
 
         if os.path.exists(config_manager.PATH_ICON):
@@ -45,7 +51,7 @@ class ConfigWindow(ctk.CTk):
         self.after(500, lambda: self.attributes("-topmost", False))
 
         # --- UI PRINCIPAL (TABS) ---
-        self.tabview = ctk.CTkTabview(self, width=330, height=430)
+        self.tabview = ctk.CTkTabview(self, width=380, height=600)
         self.tabview.pack(padx=10, pady=10, fill="both", expand=True)
         
         self.tabview.configure(segmented_button_selected_color=STREMIO_PURPLE)
@@ -59,9 +65,9 @@ class ConfigWindow(ctk.CTk):
         # ==========================================
         
         self.label_title = ctk.CTkLabel(
-            self.tab_config, text="Stremio RPC", font=("Roboto", 24, "bold"), text_color="white"
+            self.tab_config, text="Media RPC", font=("Roboto", 24, "bold"), text_color="white"
         )
-        self.label_title.pack(pady=(15, 20))
+        self.label_title.pack(pady=(10, 15))
 
         # OPCIONES SISTEMA
         self.frame_opts = ctk.CTkFrame(self.tab_config, fg_color="transparent")
@@ -83,11 +89,63 @@ class ConfigWindow(ctk.CTk):
             self.frame_opts, 
             text="Mostrar Botón 'Buscar Anime'",
             progress_color=STREMIO_PURPLE,
-            font=("Roboto", 14)
+            font=("Roboto", 14),
+            command=self.update_preview # [NUEVO] Actualizar preview al cambiar
         )
         if self.current_config.get("show_search_button", True):
             self.switch_btn.select()
         self.switch_btn.pack(anchor="w", pady=10)
+
+        # --- PREVIEW SECTION ---
+        self.lbl_preview = ctk.CTkLabel(self.tab_config, text="Vista Previa (Discord):", font=("Roboto", 12, "bold"), text_color="gray")
+        self.lbl_preview.pack(pady=(15, 5))
+
+        self.frame_preview = ctk.CTkFrame(self.tab_config, fg_color=DISCORD_BG, corner_radius=10)
+        self.frame_preview.pack(fill="x", padx=20, pady=5)
+
+        # Mockup Layout
+        self.preview_content = ctk.CTkFrame(self.frame_preview, fg_color="transparent")
+        self.preview_content.pack(padx=10, pady=10, fill="x")
+
+        # Image Placeholder (Stremio Logo)
+        # Intentamos cargar el icono real si existe, sino un cuadro gris
+        self.img_preview = None
+        if os.path.exists(config_manager.PATH_ICON):
+            pil_img = Image.open(config_manager.PATH_ICON)
+            self.img_preview = ctk.CTkImage(light_image=pil_img, dark_image=pil_img, size=(60, 60))
+        
+        self.lbl_img = ctk.CTkLabel(self.preview_content, text="", image=self.img_preview, width=60, height=60, fg_color="#202225", corner_radius=8)
+        self.lbl_img.pack(side="left", padx=(0, 10), anchor="n")
+
+        # Text Info
+        self.frame_text = ctk.CTkFrame(self.preview_content, fg_color="transparent")
+        self.frame_text.pack(side="left", fill="both", expand=True)
+
+        self.lbl_app_name = ctk.CTkLabel(self.frame_text, text="Media RPC", font=("Roboto", 14, "bold"), text_color=DISCORD_TEXT_HEADER, anchor="w")
+        self.lbl_app_name.pack(fill="x")
+
+        self.lbl_details = ctk.CTkLabel(self.frame_text, text="Viendo Anime", font=("Roboto", 12), text_color=DISCORD_TEXT_NORMAL, anchor="w")
+        self.lbl_details.pack(fill="x")
+
+        # self.lbl_state = ctk.CTkLabel(self.frame_text, text="Episodio 1", font=("Roboto", 12), text_color=DISCORD_TEXT_NORMAL, anchor="w")
+        # self.lbl_state.pack(fill="x")
+        
+        self.lbl_time = ctk.CTkLabel(self.frame_text, text="00:15 transcurridos", font=("Roboto", 12), text_color=DISCORD_TEXT_NORMAL, anchor="w")
+        self.lbl_time.pack(fill="x")
+
+        # Button Preview
+        self.btn_preview = ctk.CTkButton(
+            self.frame_preview, 
+            text="Buscar Anime 🔎", 
+            fg_color="#4f545c", 
+            hover_color="#5d6269", 
+            height=25,
+            font=("Roboto", 11),
+            state="disabled" # Solo visual
+        )
+        # Se empaqueta dinámicamente en update_preview
+
+        # -----------------------
 
         # Botón Reiniciar RPC
         self.btn_restart = ctk.CTkButton(
@@ -155,6 +213,14 @@ class ConfigWindow(ctk.CTk):
         self.btn_refresh_logs.pack(side="right", padx=5)
         
         self.cargar_logs()
+        self.update_preview() # Inicializar preview
+
+    def update_preview(self):
+        """Actualiza la visibilidad de elementos en el preview."""
+        if self.switch_btn.get():
+            self.btn_preview.pack(fill="x", padx=10, pady=(0, 10))
+        else:
+            self.btn_preview.pack_forget()
 
     def cargar_logs(self):
         self.textbox_logs.configure(state="normal")

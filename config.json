@@ -57,5 +57,7 @@
         "temporada",
         "subtitulado",
         "DDP5.1"
-    ]
+    ],
+    "enable_music_rpc": true,
+    "music_client_id": "1443754486945415198"
 }

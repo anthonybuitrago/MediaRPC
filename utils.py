@@ -9,14 +9,15 @@ import sys
 import subprocess
 import logging
 import psutil
+
 from config_manager import PATH_LOG
 
 def get_robust_session():
     """Retorna una sesión de requests con política de reintentos."""
     session = requests.Session()
     retry = Retry(
-        total=3,
-        backoff_factor=1,
+        total=0, # [OPTIMIZACION] Fail fast si Stremio no está (evita delay de 15s)
+        backoff_factor=0,
         status_forcelist=[500, 502, 503, 504],
         allowed_methods=["GET"]
     )
@@ -39,13 +40,15 @@ def extraer_datos_video(nombre_crudo):
 
     nombre = nombre_crudo.replace(".", " ")
     nombre = re.sub(r'\[.*?\]', '', nombre)
-    nombre = re.sub(r'\(.*?\)', '', nombre)
+    # [MEJORADO] Eliminar paréntesis SOLO si no contienen un año (19xx o 20xx)
+    # Esto limpia "(S01+02...)" pero mantiene "(2025)"
+    nombre = re.sub(r'\((?!(?:19|20)\d{2}\)).*?\)', '', nombre)
     
     tipo_detectado = "auto" 
 
     # 1. BUSCAR EPISODIO (S01E01, 1x01, - 01)
-    # Agregamos (?: |$) para permitir que coincida al final del string
-    match_episodio = re.search(r'( S\d+E\d+(?: |$)| \d+x\d+(?: |$)|[ \-_]+0?(\d{1,4})(?:[ \-_\[\.]|$))', nombre, re.IGNORECASE)
+    # [MEJORADO] El grupo débil ahora requiere guion o guion bajo (evita "Movie 2024" o "Audio 5.1")
+    match_episodio = re.search(r'( S\d+E\d+(?: |$)| \d+x\d+(?: |$)|(?: - |_)0?(\d{1,4})(?:[ \-_\[\.]|$))', nombre, re.IGNORECASE)
     
     # 2. BUSCAR SOLO TEMPORADA (S01)
     # Eliminamos espacios extra en el regex para permitir coincidencia al final
@@ -72,7 +75,7 @@ def extraer_datos_video(nombre_crudo):
     
     nombre = nombre.replace("mkv", "").replace("mp4", "").replace("avi", "")
     nombre = re.sub(r'\s+', ' ', nombre).strip()
-    nombre = nombre.strip(".-_ ")
+    nombre = nombre.strip(".-_ ()")
 
     # 4. LIMPIEZA EXTRA DE TEMPORADAS (2nd Season, Season 2, etc)
     # Esto es crucial porque la API falla con "Haikyu!! 2nd Season"
@@ -81,6 +84,49 @@ def extraer_datos_video(nombre_crudo):
 
     if len(nombre) < 2: return "Stremio", "auto"
     return nombre.strip(), tipo_detectado
+
+def extract_episode_identifier(nombre_crudo):
+    """Extrae el identificador de episodio (S01E01, 1x01) para comparar cambios reales."""
+    if not nombre_crudo: return None
+    
+    # Mismo regex que en extraer_datos_video (Actualizado)
+    match_episodio = re.search(r'( S\d+E\d+(?: |$)| \d+x\d+(?: |$)|(?: - |_)0?(\d{1,4})(?:[ \-_\[\.]|$))', str(nombre_crudo), re.IGNORECASE)
+    
+    if match_episodio:
+        return match_episodio.group(0).strip()
+    return None
+
+def formatear_episodio(nombre_crudo):
+    """
+    Extrae y formatea la información del episodio para mostrar en Discord.
+    Ejemplos:
+    - "Serie S01E05" -> "Temporada 1 | Episodio 5"
+    - "Serie 1x05"   -> "Temporada 1 | Episodio 5"
+    - "Serie - 05"   -> "Episodio 5"
+    """
+    if not nombre_crudo: return None
+    
+    # 1. Formato S01E01
+    match_s_e = re.search(r'S(\d+)E(\d+)', str(nombre_crudo), re.IGNORECASE)
+    if match_s_e:
+        temp = int(match_s_e.group(1))
+        ep = int(match_s_e.group(2))
+        return f"Temporada {temp} | Episodio {ep}"
+
+    # 2. Formato 1x01
+    match_x = re.search(r'(\d+)x(\d+)', str(nombre_crudo), re.IGNORECASE)
+    if match_x:
+        temp = int(match_x.group(1))
+        ep = int(match_x.group(2))
+        return f"Temporada {temp} | Episodio {ep}"
+
+    # 3. Formato " - 01" o "Episode 01" (Sin temporada explícita)
+    match_ep_only = re.search(r'(?: - |Episode |Episodio )(\d+)', str(nombre_crudo), re.IGNORECASE)
+    if match_ep_only:
+        ep = int(match_ep_only.group(1))
+        return f"Episodio {ep}"
+
+    return None
 
 def formato_velocidad(bytes_sec):
     try:
@@ -205,14 +251,13 @@ def obtener_metadatos(nombre_busqueda, tipo_forzado="auto"):
 
     except Exception as e:
         logging.error(f"⚠️ Error Metadata: {e}")
-    
     # Guardar en cache
     METADATA_CACHE[cache_key] = datos
     return datos
 
 # --- LÓGICA AUTO-START ---
 def get_startup_path():
-    return os.path.join(os.getenv('APPDATA'), r'Microsoft\Windows\Start Menu\Programs\Startup', 'StremioRPC.lnk')
+    return os.path.join(os.getenv('APPDATA'), r'Microsoft\Windows\Start Menu\Programs\Startup', 'MediaRPC.lnk')
 
 def check_autostart():
     return os.path.exists(get_startup_path())
@@ -289,6 +334,7 @@ def set_autostart(enable: bool):
         # Queremos desactivar y está activado -> Llamamos a toggle (que lo borrará)
         toggle_autostart(None, None)
 
+
 def is_process_running(process_name):
     """Verifica si un proceso está corriendo usando psutil (Más eficiente)."""
     try:
@@ -298,3 +344,91 @@ def is_process_running(process_name):
         return False
     except Exception:
         return False
+
+def get_stremio_window_title():
+    """Obtiene el título de la ventana de Stremio."""
+    try:
+        import ctypes
+        user32 = ctypes.windll.user32
+        
+        # Callback para EnumWindows
+        WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
+        
+        found_title = []
+
+        def enum_windows_proc(hwnd, lParam):
+            length = user32.GetWindowTextLengthW(hwnd)
+            if length > 0:
+                buff = ctypes.create_unicode_buffer(length + 1)
+                user32.GetWindowTextW(hwnd, buff, length + 1)
+                title = buff.value
+                
+                # Buscamos ventanas que parezcan de Stremio
+                # Stremio suele tener el título del video o "Stremio"
+                # Pero necesitamos filtrar para no pillar otras cosas
+                
+                # Buscamos por nombre de proceso si es posible, pero es más complejo con ctypes puro.
+                # Simplificación: Si el título contiene "Stremio" o coincide con lo que buscamos.
+                # Mejor: Buscamos la ventana principal de la aplicación.
+                
+                # En Qt (Stremio usa Qt), la clase suele ser "Qt5QWindowIcon" o similar.
+                # Pero el título cambia.
+                
+                # Vamos a devolver cualquier título que NO sea "Stremio" exacto pero que parezca un video?
+                # No, eso es arriesgado.
+                
+                # Estrategia: Buscar ventana visible cuyo proceso sea Stremio.exe
+                pid = ctypes.c_ulong()
+                user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+                
+                # Aquí necesitaríamos psutil para verificar el nombre del proceso
+                try:
+                    import psutil
+                    proc = psutil.Process(pid.value)
+                    process_name = proc.name().lower()
+                    
+                    # logging.info(f"🐛 DEBUG: Window '{title}' | Process: {process_name}")
+                    
+                    if "stremio" in process_name:
+                        # Ignorar ventanas ocultas o vacías
+                        if user32.IsWindowVisible(hwnd) and title:
+                            # logging.info(f"🐛 DEBUG: Stremio Window Found: '{title}'")
+                            found_title.append(title)
+                            return False # Stop enumeration
+                except Exception as e:
+                    # logging.error(f"Error checking process for window {hwnd}: {e}")
+                    pass
+                    
+            return True # Continue enumeration
+
+        user32.EnumWindows(WNDENUMPROC(enum_windows_proc), 0)
+        
+        if found_title:
+            return found_title[0]
+            
+    except Exception as e:
+        logging.error(f"Error obteniendo título de ventana: {e}")
+        
+    return None      
+def check_for_updates(current_version):
+    """
+    Comprueba si hay una nueva versión en GitHub.
+    Retorna (bool, str): (Hay actualización, Nueva versión)
+    """
+    try:
+        url = "https://api.github.com/repos/anthonybuitrago/stremio-discord-rpc/releases/latest"
+        resp = requests.get(url, timeout=3)
+        if resp.status_code == 200:
+            data = resp.json()
+            latest_tag = data.get("tag_name", "").strip()
+            
+            # Limpieza básica de 'v' (v5.2 -> 5.2)
+            curr = current_version.lower().lstrip('v')
+            latest = latest_tag.lower().lstrip('v')
+            
+            if curr != latest:
+                return True, latest_tag
+    except Exception as e:
+        logging.error(f"Error buscando actualizaciones: {e}")
+    
+    return False, ""
