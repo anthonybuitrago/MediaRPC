@@ -1,54 +1,97 @@
-2.  Ensure Python 3.10+ is installed.
-3.  Install the required dependencies using the command:
-    ```bash
-    pip install -r requirements.txt
-    ```
-4.  Run the script:
-    ```bash
-    python main.py
+# 🚀 MediaRPC v5.3
+
+**MediaRPC** is a lightweight, "set and forget" Discord Rich Presence (RPC) tool for **Stremio** and **Music Players** (YouTube Music, Spotify, etc.) on Windows.
+
+It automatically detects what you are watching or listening to and displays it on your Discord profile with high-quality cover art and metadata.
+
+![MediaRPC Preview](https://i.imgur.com/example.png) *(You can replace this with a real screenshot later)*
+
+## ✨ Features
+
+- **🎬 Stremio Support**: Displays the movie or series you are watching, including episode details and progress.
+- **🎵 Music Support**: Detects music from media keys (YouTube Music, Spotify, etc.) and displays it with cover art.
+- **🖼️ Smart Metadata**:
+  - Fetches high-quality posters from **Cinemeta** (for video).
+  - Fetches album art from **iTunes (US/JP)** and **Deezer** (for music).
+- **⚡ Performance**: Optimized to run silently in the background with minimal resource usage.
+- **🔄 Robustness**: Auto-reconnects if Discord or Stremio is restarted.
+- **📝 Logging**: Detailed logs to help troubleshoot connection issues.
+
+---
+
+## 📥 Installation
+
+### Option 1: The Easy Way (Recommended)
+1. Go to the [Releases Page](../../releases).
+2. Download the latest `MediaRPC.exe`.
+3. Run it! A satellite icon 🛰️ will appear in your system tray.
+
+### Option 2: For Developers (Python)
+If you want to run from source or modify the code:
+
+1. Install [Python 3.10+](https://www.python.org/).
+2. Clone this repository:
+   ```bash
+   git clone https://github.com/anthonybuitrago/stremio-discord-rpc.git
+   cd stremio-discord-rpc
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Run the script:
+   ```bash
+   python main.py
+   ```
+
+---
+
+## 🎮 Usage
+
+### For Stremio
+1. Open **MediaRPC**.
+2. Open **Stremio** and start watching something.
+3. Check your Discord profile! It should show "Watching **[Movie/Series Name]**".
+
+### For Music
+1. Open **MediaRPC**.
+2. Play music on **YouTube Music** (Desktop/Web), **Spotify**, or any player that supports Windows Media Controls.
+3. Discord will show "Listening to **[Song Name]**".
+
+> **Note:** Music takes priority over Stremio. If you pause music, Stremio status will return.
+
+---
+
+## ⚙️ Configuration
+
+A `config.json` file is created automatically in the same folder. You can edit it to customize behavior:
+
+```json
+{
+    "client_id": "1310468962450866226",  // Discord App ID for Stremio
+    "music_client_id": "1310468962450866226", // Discord App ID for Music (Optional)
+    "update_interval": 15,               // How often to update Discord (seconds)
+    "show_search_button": true,          // Show "Search Anime" button
+    "enable_music_rpc": true             // Enable/Disable music detection
+}
 ```
 
-# Internal Libraries Used
-* **threading:** Used to run the Stremio monitoring loop and the GUI loop concurrently without blocking.
+---
 
-* **json**: For parsing API responses and managing the local configuration file.
+## 🛠️ Troubleshooting
 
-* **re:** For regular expression pattern matching and string sanitization.
+- **"It's not showing up on Discord!"**
+  - Make sure "Activity Privacy" -> "Display current activity as a status message" is **ON** in Discord settings.
+  - Check the system tray icon 🛰️. Right-click -> **View Logs** to see if there are errors.
 
-* **os & sys:** For file system operations and path management across different environments (Source vs. Frozen EXE).
+- **"Cover art is missing!"**
+  - MediaRPC searches multiple databases (Cinemeta, iTunes, Deezer). If a song/movie is very obscure, it might not find a match.
 
-* **time:** For managing update intervals and heartbeat logic.
+- **"Stremio status is stuck?"**
+  - Right-click the tray icon -> **Restart RPC**.
 
-* **urllib.parse:** For encoding URL queries safely.
+---
 
-# Usage
-The system is designed with a "Set and Forget" philosophy.
+## 📜 License
 
-Upon execution, the application runs silently in the background. A purple satellite/link icon will appear in the Windows System Tray (near the clock).
-
-* **Automatic Detection:** Simply open Stremio and start watching a video. The status will update automatically on Discord.
-
-* **System Tray Menu:** Right-clicking the tray icon reveals a menu with options to:
-
-* **View Logs:** Opens the stremio_log.txt file for debugging.
-
-* **Exit:** Safely terminates the background process and closes the connection to Discord.
-
-* **Configuration:** You can modify the config.json file to change the Discord Client ID, update interval, or add words to the cleanup blacklist. Changes require an application restart.
-
-# Contributions to Consider
-* **GUI for Configuration:** Develop a graphical settings window using libraries like customtkinter to allow users to modify the JSON configuration without editing the text file directly.
-
-* **Enhanced Metadata:** Implement additional API fallbacks (e.g., TMDB or IMDB) for cases where Cinemeta might not return a result.
-
-# License
-This project is distributed under the terms of the MIT License.
-
-The MIT License is a permissive free software license originating at the Massachusetts Institute of Technology (MIT). It puts only very limited restriction on reuse and has, therefore, an excellent license compatibility. It permits reuse within proprietary software provided that all copies of the licensed software include a copy of the MIT License terms and the copyright notice.
-
-# Additional Resources
-* **Stremio API:** https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/api/responses/meta.md
-
-* **Discord RPC Documentation:** https://discord.com/developers/docs/rich-presence/how-to
-
-* **PyInstaller Documentation:** https://pyinstaller.org/en/stable/
+This project is licensed under the **MIT License**. Feel free to modify and distribute it.
