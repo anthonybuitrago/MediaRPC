@@ -268,18 +268,6 @@ class ConfigWindow(ctk.CTk):
         # Guardar JSON
         config_manager.guardar_config(datos_nuevos)
 
-        # Aplicar Auto-Start real
-        deseo_autostart = bool(self.switch_autostart.get())
-        utils.set_autostart(deseo_autostart)
-
-        print("Configuración guardada.")
-        self.cerrar_ventana()
-
-    def cerrar_ventana(self):
-        self.destroy()
-        self.quit()
-
-
 def abrir_ventana():
     app = ConfigWindow()
     app.after(100, app.focus_force)

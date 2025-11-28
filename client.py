@@ -412,7 +412,7 @@ class StremioRPCClient:
             self.last_source = None
 
     def run_logic(self):
-        logging.info("🚀 Media RPC v5.3 Iniciado")
+        logging.info("🚀 Media RPC v5.4 Iniciado")
         # [OPTIMIZACION] No conectamos al inicio por defecto.
 
         while self.running:
