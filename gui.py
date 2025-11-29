@@ -239,7 +239,7 @@ class ConfigWindow(ctk.CTk):
             # Importamos aquí para evitar ciclos o cargas innecesarias
             import utils 
             # Definimos la versión actual aquí o la importamos de main/config
-            CURRENT_VERSION = "v5.3" 
+            CURRENT_VERSION = config_manager.APP_VERSION 
             
             has_update, new_version = utils.check_for_updates(CURRENT_VERSION)
             
