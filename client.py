@@ -360,13 +360,17 @@ class StremioRPCClient:
             
             logging.info(f"🌐 Extensión (Music): {data['title']} - {data['artist']}")
             
+            # Botón para abrir canción
+            buttons = []
+            if data.get("url"):
+                buttons.append({"label": "Escuchar en YouTube 🎵", "url": data["url"]})
+
             self.rpc.update(
                 activity_type=ActivityType.LISTENING,
                 details=data['title'],
                 state=data['artist'],
                 large_image=data['cover'] if data['cover'] else "music_icon",
-                # small_image="music_icon",
-                # small_text="YouTube Music (Web)"
+                buttons=buttons if buttons else None
             )
             return True
 

@@ -5,7 +5,7 @@ function getInfo() {
         const title = document.querySelector(".title.style-scope.ytmusic-player-bar")?.textContent?.trim();
         const byline = document.querySelector(".byline.style-scope.ytmusic-player-bar")?.textContent?.trim();
         const img = document.querySelector(".image.style-scope.ytmusic-player-bar")?.src;
-        
+
         // Progress
         const progress = document.querySelector("#progress-bar");
         const currentTime = progress?.getAttribute("aria-valuenow");
@@ -20,7 +20,7 @@ function getInfo() {
         // Parse Artist/Album from byline (Format: "Artist • Album • Year")
         let artist = byline;
         let album = "";
-        
+
         if (byline && byline.includes("•")) {
             const parts = byline.split("•");
             artist = parts[0].trim();
@@ -33,6 +33,7 @@ function getInfo() {
             artist: artist,
             album: album,
             cover: img,
+            url: window.location.href, // [NUEVO] URL para el botón
             current_time: parseFloat(currentTime || 0),
             total_time: parseFloat(totalTime || 0),
             is_playing: isPlaying
