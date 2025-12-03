@@ -7,7 +7,7 @@ import sys
 import config_manager
 
 # Path to the PowerShell script
-SCRIPT_PATH = os.path.join(config_manager.ASSET_DIR, "get_media_info.ps1")
+SCRIPT_PATH = os.path.join(config_manager.ASSET_DIR, "assets", "get_media_info.ps1")
 
 def get_media_info():
     """
@@ -34,7 +34,7 @@ def get_media_info():
             errors='replace', # [NUEVO] Evitar crash si hay caracteres raros
             startupinfo=startupinfo,
             creationflags=0x08000000, # CREATE_NO_WINDOW
-            timeout=5 # Fast timeout
+            timeout=3 # Fast timeout
         )
 
         if result.returncode != 0:
@@ -49,7 +49,10 @@ def get_media_info():
             return None
 
         # Parse JSON
-        data = json.loads(output)
+        try:
+            data = json.loads(output)
+        except json.JSONDecodeError:
+            return None
         
         # Check if we have valid data
         if not data.get("title"):

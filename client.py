@@ -161,8 +161,8 @@ class StremioRPCClient:
                     state=None, # Eliminado a petición del usuario
                     large_image=self.current_poster,
                     large_text=stats_text,
-                    small_image="stremio_logo",
-                    small_text="Stremio",
+                    # small_image="stremio_logo", # Eliminado a petición
+                    # small_text="Stremio",
                     start=self.start_time,
                     buttons=buttons_list
                 )
@@ -174,14 +174,8 @@ class StremioRPCClient:
     def _clear_rpc(self):
         """Limpia la presencia."""
         try:
-            # [MODIFICADO] Antes de limpiar, verificamos si el proceso sigue vivo.
-            # Verificamos múltiples nombres de proceso para cubrir diferentes versiones.
-            # SOLO si la fuente era Stremio. Si es música, limpiamos siempre.
-            if self.last_source != "music" and (utils.is_process_running("stremio.exe") or 
-                utils.is_process_running("stremio-runtime.exe") or 
-                utils.is_process_running("stremio-shell-ng.exe")):
-                logging.info("⚠️ API desconectada pero Stremio sigue abierto. Manteniendo RPC.")
-                return
+            # [MODIFICADO] Eliminada verificación de proceso. Si la API desconecta, limpiamos.
+            # Esto corrige el bug donde la actividad persistía al cerrar Stremio.
 
             if self.rpc:
                 if self.last_source == "music":
@@ -358,8 +352,8 @@ class StremioRPCClient:
                 details=music_info['title'],
                 state=music_info['artist'],
                 large_image=large_img,
-                small_image="music_icon",
-                small_text="YouTube Music"
+                # small_image="music_icon", # Eliminado a petición
+                # small_text="YouTube Music"
             )
             return True
             
