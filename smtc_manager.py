@@ -67,5 +67,7 @@ def get_media_info():
             return loop.run_until_complete(get_media_info_async())
             
     except Exception as e:
+        if "Event loop is closed" in str(e):
+            return None
         logging.error(f"Error running async wrapper: {e}")
         return None

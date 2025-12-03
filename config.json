@@ -59,5 +59,9 @@
         "DDP5.1"
     ],
     "enable_music_rpc": true,
-    "music_client_id": "1443754486945415198"
+    "music_client_id": "1443754486945415198",
+    "trakt": {
+        "client_id": "d82069cb333691ade56aa542cdaad4778b6a0758ba14e97ade9ed05a5f449cfe",
+        "username": "Bluxygho"
+    }
 }

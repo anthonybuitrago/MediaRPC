@@ -12,6 +12,7 @@ import utils
 import media_manager
 import smtc_manager
 import server
+import trakt_manager
 
 class StremioRPCClient:
     def __init__(self):
@@ -30,6 +31,7 @@ class StremioRPCClient:
         self.stremio_was_connected = False # [NUEVO] Para logs de conexión
         self.session = utils.get_robust_session() # [OPTIMIZACION] Sesión persistente (Keep-Alive)
         self.last_stream_idx = None # [NUEVO] Para detectar cambios de episodio en packs
+        self.last_trakt_log_str = "" # [NUEVO] Para evitar spam de logs Trakt
         
         # [EXTENSION]
         self.extension_info = None
@@ -471,6 +473,50 @@ class StremioRPCClient:
             video = self._select_best_video(data)
             
             if video:
+                # [TRAKT INTEGRATION]
+                # Si tenemos credenciales, preguntamos a Trakt primero
+                trakt_conf = self.config.get("trakt")
+                if trakt_conf and trakt_conf.get("username") and trakt_conf.get("client_id"):
+                    try:
+                        trakt_info = trakt_manager.get_user_activity(
+                            trakt_conf["username"], 
+                            trakt_conf["client_id"]
+                        )
+                        
+                        if trakt_info:
+                            # Log solo si cambia la info
+                            current_log_str = f"{trakt_info['title']} - {trakt_info.get('details', '')}"
+                            if current_log_str != self.last_trakt_log_str:
+                                logging.info(f"🕵️ Trakt: {current_log_str} ({trakt_info['action']})")
+                                self.last_trakt_log_str = current_log_str
+                            
+                            # Conectar a Discord
+                            self.connect_discord(self.config["client_id"])
+                            
+                            # Actualizar RPC con datos de Trakt
+                            self.last_source = "trakt"
+                            
+                            # Buscar poster usando IMDB ID si es posible
+                            poster = "stremio_logo"
+                            if trakt_info.get("imdb_id"):
+                                # Usamos Cinemeta para buscar el poster oficial con el ID
+                                # Esto es más seguro que buscar por nombre
+                                meta = media_manager.search_cinemeta(trakt_info["imdb_id"], "auto")
+                                poster = meta["poster"]
+                            
+                            self.rpc.update(
+                                activity_type=ActivityType.WATCHING,
+                                details=trakt_info['title'],
+                                state=trakt_info.get('details'), # S01E01 - Title
+                                large_image=poster,
+                                # small_image="trakt_icon", # Opcional
+                                # small_text="Trakt.tv"
+                            )
+                            return True
+                    except Exception as e:
+                        logging.error(f"Error Trakt: {e}")
+
+                # [FALLBACK] Lógica original (Adivinar por nombre de archivo)
                 # Intentar detectar el archivo específico (Episodio)
                 active_file = self._get_active_file_name(video)
                 
