@@ -185,15 +185,11 @@ class StremioRPCClient:
             # Esto corrige el bug donde la actividad persistía al cerrar Stremio.
 
             if self.rpc:
-                if self.last_source in ["music", "extension_music"]:
-                    # Para música, queremos que desaparezca INSTANTÁNEAMENTE
-                    # logging.info("🧹 Limpiando actividad de música...")
-                    self.rpc.clear()
-                else:
-                    # Para Stremio, cerramos conexión para intentar dejar "Actividad Reciente"
-                    # O simplemente cerramos para ahorrar recursos
-                    self.rpc.close()
-                    self.rpc = None
+                # [FIX] Siempre limpiamos explícitamente para evitar persistencia
+                # logging.info("🧹 Limpiando actividad...")
+                self.rpc.clear()
+                # No cerramos la conexión (self.rpc.close()) para mantener el pipe listo
+                # Esto es más rápido para volver a mostrar actividad
             
             self.last_title = ""
             self.last_raw_title = ""
@@ -506,11 +502,11 @@ class StremioRPCClient:
                             
                             self.rpc.update(
                                 activity_type=ActivityType.WATCHING,
-                                details=trakt_info['title'],
-                                state=trakt_info.get('details'), # S01E01 - Title
+                                details=trakt_info['title'], # Show Title (e.g. Clevatess)
+                                state=trakt_info['episode_title'], # Episode Title (e.g. The Lord...)
                                 large_image=poster,
-                                # small_image="trakt_icon", # Opcional
-                                # small_text="Trakt.tv"
+                                small_image="stremio_logo",
+                                small_text=f"S{trakt_info['season']}E{trakt_info['episode']}" # S1E1
                             )
                             return True
                     except Exception as e:
