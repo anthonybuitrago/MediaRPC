@@ -472,12 +472,24 @@ class StremioRPCClient:
                 # [TRAKT INTEGRATION]
                 # Si tenemos credenciales, preguntamos a Trakt primero
                 trakt_conf = self.config.get("trakt")
-                if trakt_conf and trakt_conf.get("username") and trakt_conf.get("client_id"):
+                
+                # Check explícito de credenciales
+                if not trakt_conf or not trakt_conf.get("username") or not trakt_conf.get("client_id"):
+                    if not hasattr(self, "_trakt_warning_shown"):
+                        logging.warning("⚠️ Trakt saltado: Faltan credenciales en config.json (username/client_id).")
+                        self._trakt_warning_shown = True
+                else:
                     try:
                         trakt_info = trakt_manager.get_user_activity(
                             trakt_conf["username"], 
                             trakt_conf["client_id"]
                         )
+                        
+                        if not trakt_info:
+                             # Solo logueamos esto una vez por sesión de video para no spammear
+                             if not hasattr(self, "_trakt_no_activity_logged"):
+                                 logging.warning(f"⚠️ Trakt configurado pero no reporta actividad para '{trakt_conf['username']}'. Verificando Stremio local...")
+                                 self._trakt_no_activity_logged = True
                         
                         if trakt_info:
                             # Log solo si cambia la info
