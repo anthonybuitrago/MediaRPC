@@ -14,19 +14,13 @@ function getInfo() {
         };
 
         // --- 1. PLAYBACK & VISIBILITY DATA ---
-        const video = document.querySelector("video");
-
-        // [NUEVO] Si la pestaña está oculta (minimizada o en otro tab), forzamos pausa
+        // [SIMPLIFIED] We do not look for <video> tags. 
+        // If the tab is visible, we assume the user is watching.
+        // If the tab is hidden/minimized, we assume paused.
         const isHidden = document.hidden;
-        data.is_hidden = isHidden; // GLOBAL: Sent even if no video found
-
-        if (video) {
-            data.type = "playback";
-            // Está sonando SOLO si el video corre Y la pestaña es visible
-            data.is_playing = !video.paused && !isHidden;
-            data.current_time = video.currentTime;
-            data.total_time = video.duration;
-        }
+        data.is_hidden = isHidden;
+        data.is_playing = !isHidden;
+        data.type = "mixed"; // Use mixed mode (no timestamp dependency)
 
         // --- 2. METADATA (Main Page) ---
         // Try to find title in standard locations
@@ -51,7 +45,7 @@ function getInfo() {
         }
 
         // --- 3. FALLBACKS ---
-        if (!data.title && (window.location.host.includes("hianime") || !video)) {
+        if (!data.title && window.location.host.includes("hianime")) {
             const pageTitle = document.title;
             // Common format: "Watch One Piece Episode 1 English Sub ..."
             if (pageTitle.includes("Watch")) {
@@ -69,7 +63,7 @@ function getInfo() {
         }
 
         // Episode Parsing
-        if (data.type === "meta" || data.type === "mixed") {
+        if (data.type === "meta" || data.type === "mixed" || data.type === "playback") {
             // Try MULTIPLE selectors for the active episode button
             // HiAnime changes these often. We look for 'active' and 'ep-item'/'ssl-item-ep'
             const activeEp = document.querySelector(".ssl-item-ep.active .ep-name") ||
@@ -121,8 +115,8 @@ function getInfo() {
     }
 }
 
-// Send data every 1 second
-setInterval(() => {
+
+function sendUpdate() {
     let data = getInfo();
 
     // [DEBUG] Always send a heartbeat if no data found
@@ -145,4 +139,21 @@ setInterval(() => {
             // Extension context invalidated
         }
     }
-}, 1000);
+}
+
+// Send data every 1 second
+setInterval(sendUpdate, 1000);
+
+// [NEW] Trigger update immediately when visibility changes (Tab switched/returned)
+document.addEventListener("visibilitychange", () => {
+    setTimeout(sendUpdate, 100);
+});
+
+// [NEW] Trigger update on interaction (Click/Key) to wake up script/recover from navigation
+document.addEventListener("click", () => {
+    setTimeout(sendUpdate, 500);
+});
+document.addEventListener("keyup", () => {
+    setTimeout(sendUpdate, 500);
+});
+
