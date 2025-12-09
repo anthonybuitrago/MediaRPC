@@ -133,12 +133,20 @@ class MediaRPCClient:
         if data.get("url"):
             buttons.append({"label": "Play on YouTube", "url": data["url"]})
 
+        # Calculate Start Time for accurate "Elapsed" timer
+        start_ts = None
+        if data.get("current_time") is not None and data.get("is_playing"):
+             # If we have current progress, Back-calculate start time
+             # Discord "start" is the timestamp when 0:00 happened.
+             start_ts = time.time() - data["current_time"]
+
         self.rpc.update(
             activity_type=ActivityType.LISTENING,
             details=data['title'],
             state=data['artist'],
             large_image=data['cover'] if data['cover'] else "music_icon",
-            buttons=buttons if buttons else None
+            buttons=buttons if buttons else None,
+            start=start_ts # [NEW] Accurate timer
         )
         return True
 
