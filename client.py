@@ -131,7 +131,7 @@ class MediaRPCClient:
         # Botón para abrir canción
         buttons = []
         if data.get("url"):
-            buttons.append({"label": "Escuchar en YouTube 🎵", "url": data["url"]})
+            buttons.append({"label": "Play on YouTube", "url": data["url"]})
 
         self.rpc.update(
             activity_type=ActivityType.LISTENING,
@@ -223,7 +223,7 @@ class MediaRPCClient:
             large_image=current_poster,
             small_text=small_txt,
             start=start_ts, 
-            buttons=[{"label": "Ver en HiAnime", "url": data.get("url", "https://hianime.to")}]
+            buttons=[{"label": "Watch on HiAnime", "url": data.get("url", "https://hianime.to")}]
         )
         self.hianime_last_data = new_update_data
         if start_ts: self.hianime_last_ts = start_ts
